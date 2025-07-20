@@ -380,13 +380,22 @@ const autoAssignStaffToRoster = async (roster, shifts, options, transaction) => 
   const { strategy, prefer_full_time, avoid_consecutive_nights, max_shifts_per_person } = options;
 
   try {
-    // Get available staff for the department
+    // Get available staff from the specific department only (excluding managers)
     const availableStaff = await User.findAll({
       where: {
         department_id: roster.department_id,
+        role: 'employee', // Only employees, no managers
         is_active: true
       },
-      attributes: ['id', 'full_name', 'email', 'role', 'created_at'],
+      attributes: ['id', 'full_name', 'email', 'role', 'created_at', 'department_id'],
+      include: [
+        {
+          model: Department,
+          as: 'department',
+          attributes: ['id', 'name'],
+          required: false
+        }
+      ],
       transaction
     });
 
@@ -396,7 +405,7 @@ const autoAssignStaffToRoster = async (roster, shifts, options, transaction) => 
         coverage_percentage: 0,
         conflicts: [],
         unassigned_shifts: shifts.length,
-        message: 'No available staff found in department'
+        message: 'No available employees found in department (managers excluded)'
       };
     }
 
@@ -425,79 +434,19 @@ const autoAssignStaffToRoster = async (roster, shifts, options, transaction) => 
       };
     });
 
-    // Process each date
-    for (const [date, dateShifts] of Object.entries(shiftsByDate)) {
-      console.log(`Processing ${dateShifts.length} shifts for date: ${date}`);
+    // Use balanced assignment algorithm for fair distribution
+    const assignmentResult = await assignStaffWithBalancedDistribution(
+      shifts,
+      sortedStaff,
+      staffWorkload,
+      options,
+      roster,
+      transaction
+    );
 
-      // Sort shifts by priority (day shifts first, then evening, then night)
-      const sortedShifts = dateShifts.sort((a, b) => {
-        const priority = { day: 1, evening: 2, night: 3 };
-        return (priority[a.shift_type] || 4) - (priority[b.shift_type] || 4);
-      });
-
-      for (const shift of sortedShifts) {
-        const requiredStaff = shift.required_staff;
-        let assignedToShift = 0;
-
-        console.log(`Assigning staff to ${shift.title} on ${date} (needs ${requiredStaff} staff)`);
-
-        // Try to assign staff to this shift
-        for (const staff of sortedStaff) {
-          if (assignedToShift >= requiredStaff) break;
-
-          // Check if this staff member can be assigned
-          const canAssign = await canAssignStaffToShift(
-            staff,
-            shift,
-            staffWorkload[staff.id],
-            options,
-            transaction
-          );
-
-          if (canAssign.allowed) {
-            try {
-              // Create the assignment
-              const assignment = await ShiftAssignment.create({
-                shift_id: shift.id,
-                employee_id: staff.id,
-                role: determineStaffRole(staff),
-                status: 'assigned',
-                assigned_by: roster.created_by,
-                assigned_at: new Date(),
-                notes: `Auto-assigned using ${strategy} strategy`
-              }, { transaction });
-
-              // Update shift assigned_staff count
-              await shift.increment('assigned_staff', { transaction });
-
-              // Update staff workload tracking
-              updateStaffWorkload(staffWorkload[staff.id], shift, date);
-
-              assignments.push(assignment);
-              assignedToShift++;
-              assignmentsCreated++;
-
-              console.log(`✓ Assigned ${staff.full_name} to ${shift.title} on ${date}`);
-
-            } catch (error) {
-              console.error(`Failed to assign ${staff.full_name} to shift ${shift.id}:`, error.message);
-              conflicts.push({
-                staff_id: staff.id,
-                shift_id: shift.id,
-                error: error.message
-              });
-            }
-          } else {
-            console.log(`✗ Cannot assign ${staff.full_name} to ${shift.title}: ${canAssign.reason}`);
-          }
-        }
-
-        // Log assignment results for this shift
-        if (assignedToShift < requiredStaff) {
-          console.log(`⚠ Shift ${shift.title} on ${date} is understaffed: ${assignedToShift}/${requiredStaff}`);
-        }
-      }
-    }
+    assignments.push(...assignmentResult.assignments);
+    conflicts.push(...assignmentResult.conflicts);
+    assignmentsCreated = assignmentResult.assignmentsCreated;
 
     // Calculate final statistics
     const totalRequiredStaff = shifts.reduce((sum, shift) => sum + shift.required_staff, 0);
@@ -531,37 +480,32 @@ const autoAssignStaffToRoster = async (roster, shifts, options, transaction) => 
 };
 
 /**
- * Sort staff based on assignment strategy
+ * Sort staff based on assignment strategy with fair distribution
  */
 const sortStaffByStrategy = (staff, strategy) => {
   switch (strategy) {
     case 'seniority':
+      // Sort by hire date (oldest first)
       return staff.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-    case 'availability':
-      // Sort by role priority (doctors first, then nurses, etc.)
-      const rolePriority = { doctor: 1, nurse: 2, technician: 3, employee: 4 };
-      return staff.sort((a, b) => {
-        const aPriority = rolePriority[a.role] || 5;
-        const bPriority = rolePriority[b.role] || 5;
-        return aPriority - bPriority;
-      });
-
     case 'random':
-      return staff.sort(() => Math.random() - 0.5);
+      // Proper Fisher-Yates shuffle for true randomness
+      const shuffled = [...staff];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
 
     case 'balanced':
     default:
-      // Balanced approach: mix of role priority and randomness
-      return staff.sort((a, b) => {
-        const rolePriority = { doctor: 1, nurse: 2, technician: 3, employee: 4 };
-        const aPriority = rolePriority[a.role] || 5;
-        const bPriority = rolePriority[b.role] || 5;
-        // Add some randomness for fairness within same role
-        const aScore = aPriority + Math.random() * 0.5;
-        const bScore = bPriority + Math.random() * 0.5;
-        return aScore - bScore;
-      });
+      // Balanced approach: randomize order for fair distribution
+      const balanced = [...staff];
+      for (let i = balanced.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [balanced[i], balanced[j]] = [balanced[j], balanced[i]];
+      }
+      return balanced;
   }
 };
 
@@ -707,6 +651,134 @@ const calculateStaffUtilization = (staffWorkload, availableStaff) => {
   });
 
   return utilization;
+};
+
+/**
+ * Balanced assignment algorithm that ensures fair distribution of shifts
+ */
+const assignStaffWithBalancedDistribution = async (shifts, staff, staffWorkload, options, roster, transaction) => {
+  const assignments = [];
+  const conflicts = [];
+  let assignmentsCreated = 0;
+
+  // Create a workload-balanced staff queue
+  const createBalancedQueue = () => {
+    return staff.sort((a, b) => {
+      const aWorkload = staffWorkload[a.id].shifts_assigned;
+      const bWorkload = staffWorkload[b.id].shifts_assigned;
+      // Sort by workload (least assigned first), then by random for fairness
+      if (aWorkload === bWorkload) {
+        return Math.random() - 0.5;
+      }
+      return aWorkload - bWorkload;
+    });
+  };
+
+  // Group shifts by date for better assignment logic
+  const shiftsByDate = shifts.reduce((groups, shift) => {
+    const date = shift.date;
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(shift);
+    return groups;
+  }, {});
+
+  // Process each date
+  for (const [date, dateShifts] of Object.entries(shiftsByDate)) {
+    console.log(`Processing ${dateShifts.length} shifts for date: ${date}`);
+
+    // Sort shifts by priority (day shifts first, then evening, then night)
+    const sortedShifts = dateShifts.sort((a, b) => {
+      const priority = { day: 1, evening: 2, night: 3 };
+      return (priority[a.shift_type] || 4) - (priority[b.shift_type] || 4);
+    });
+
+    for (const shift of sortedShifts) {
+      const requiredStaff = shift.required_staff;
+      let assignedToShift = 0;
+
+      console.log(`Assigning staff to ${shift.title} on ${date} (needs ${requiredStaff} staff)`);
+
+      // Get balanced staff queue for this shift
+      const balancedStaff = createBalancedQueue();
+
+      // Try to assign staff to this shift
+      for (const staffMember of balancedStaff) {
+        if (assignedToShift >= requiredStaff) break;
+
+        // Check if this staff member can be assigned
+        const canAssign = await canAssignStaffToShift(
+          staffMember,
+          shift,
+          staffWorkload[staffMember.id],
+          options,
+          transaction
+        );
+
+        if (canAssign.allowed) {
+          try {
+            // Create the assignment
+            const assignment = await ShiftAssignment.create({
+              shift_id: shift.id,
+              employee_id: staffMember.id,
+              role: determineStaffRole(staffMember),
+              status: 'assigned',
+              assigned_by: roster.created_by,
+              assigned_at: new Date(),
+              notes: `Auto-assigned using balanced distribution (department-wide)`
+            }, { transaction });
+
+            // Update shift assigned_staff count
+            await shift.increment('assigned_staff', { transaction });
+
+            // Update staff workload tracking
+            updateStaffWorkload(staffWorkload[staffMember.id], shift, date);
+
+            assignments.push(assignment);
+            assignedToShift++;
+            assignmentsCreated++;
+
+            console.log(`✓ Assigned ${staffMember.full_name} to ${shift.title} on ${date} [Workload: ${staffWorkload[staffMember.id].shifts_assigned}]`);
+
+          } catch (error) {
+            console.error(`Failed to assign ${staffMember.full_name} to shift ${shift.id}:`, error.message);
+            conflicts.push({
+              type: 'Assignment Error',
+              staff_id: staffMember.id,
+              staff_name: staffMember.full_name,
+              shift_id: shift.id,
+              shift_title: shift.title,
+              date,
+              error: error.message
+            });
+          }
+        } else {
+          console.log(`✗ Cannot assign ${staffMember.full_name} to ${shift.title}: ${canAssign.reason}`);
+          conflicts.push({
+            type: 'Assignment Conflict',
+            staff_id: staffMember.id,
+            staff_name: staffMember.full_name,
+            shift_id: shift.id,
+            shift_title: shift.title,
+            date,
+            reason: canAssign.reason
+          });
+        }
+      }
+
+      // Log assignment results for this shift
+      if (assignedToShift < requiredStaff) {
+        console.log(`⚠ Shift ${shift.title} on ${date} is understaffed: ${assignedToShift}/${requiredStaff}`);
+      }
+    }
+  }
+
+  return {
+    assignments,
+    conflicts,
+    assignmentsCreated
+  };
 };
 
 module.exports = {

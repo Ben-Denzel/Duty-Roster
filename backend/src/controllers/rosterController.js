@@ -1016,18 +1016,27 @@ const generateShiftsForRoster = async (roster, options, transaction) => {
 };
 
 /**
- * Auto-assign staff to shifts based on strategy
+ * Auto-assign staff to shifts based on strategy with department-wide balanced distribution
  */
 const autoAssignStaffToShifts = async (shifts, departmentId, options, transaction) => {
   const { assignment_strategy, prefer_full_time } = options;
 
-  // Get available employees from the department
+  // Get employees from the specific department only (excluding managers)
   const employees = await User.findAll({
     where: {
       department_id: departmentId,
-      role: 'employee',
+      role: 'employee', // Only employees, no managers
       is_active: true
     },
+    attributes: ['id', 'full_name', 'email', 'role', 'department_id'],
+    include: [
+      {
+        model: Department,
+        as: 'department',
+        attributes: ['id', 'name'],
+        required: false
+      }
+    ],
     transaction
   });
 
@@ -1036,14 +1045,31 @@ const autoAssignStaffToShifts = async (shifts, departmentId, options, transactio
     return;
   }
 
-  // Simple round-robin assignment for now
-  let employeeIndex = 0;
+  console.log(`Auto-assigning ${shifts.length} shifts to ${employees.length} employees from department`);
 
+  // Track workload for balanced distribution
+  const workloadTracker = {};
+  employees.forEach(emp => {
+    workloadTracker[emp.id] = 0;
+  });
+
+  // Balanced round-robin assignment
   for (const shift of shifts) {
     const assignmentsNeeded = shift.required_staff;
+    let assigned = 0;
 
-    for (let i = 0; i < assignmentsNeeded && i < employees.length; i++) {
-      const employee = employees[employeeIndex % employees.length];
+    // Sort employees by current workload (least assigned first)
+    const sortedEmployees = employees.sort((a, b) => {
+      const aWorkload = workloadTracker[a.id];
+      const bWorkload = workloadTracker[b.id];
+      if (aWorkload === bWorkload) {
+        return Math.random() - 0.5; // Random for fairness
+      }
+      return aWorkload - bWorkload;
+    });
+
+    for (const employee of sortedEmployees) {
+      if (assigned >= assignmentsNeeded) break;
 
       try {
         await ShiftAssignment.create({
@@ -1051,7 +1077,8 @@ const autoAssignStaffToShifts = async (shifts, departmentId, options, transactio
           employee_id: employee.id,
           status: 'assigned',
           assigned_by: null, // Auto-assigned
-          assigned_at: new Date()
+          assigned_at: new Date(),
+          notes: `Auto-assigned (department-wide balanced)`
         }, { transaction });
 
         // Update shift assigned_staff count
@@ -1059,13 +1086,31 @@ const autoAssignStaffToShifts = async (shifts, departmentId, options, transactio
           assigned_staff: shift.assigned_staff + 1
         }, { transaction });
 
+        // Update workload tracker
+        workloadTracker[employee.id]++;
+        assigned++;
+
+        console.log(`✓ Assigned ${employee.full_name} to shift ${shift.id} [Workload: ${workloadTracker[employee.id]}]`);
+
       } catch (error) {
         console.log(`Failed to assign ${employee.full_name} to shift ${shift.id}:`, error.message);
       }
+    }
 
-      employeeIndex++;
+    if (assigned < assignmentsNeeded) {
+      console.log(`⚠ Shift ${shift.id} is understaffed: ${assigned}/${assignmentsNeeded}`);
     }
   }
+
+  // Log final workload distribution
+  const workloadStats = Object.entries(workloadTracker)
+    .map(([empId, workload]) => {
+      const emp = employees.find(e => e.id == empId);
+      return { name: emp?.full_name, workload };
+    })
+    .sort((a, b) => b.workload - a.workload);
+
+  console.log('Final workload distribution:', workloadStats.slice(0, 10)); // Show top 10
 };
 
 module.exports = {
