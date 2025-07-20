@@ -608,6 +608,18 @@ export const notificationAPI = {
     api.post('/notifications/cleanup', options).then(res => res.data)
 }
 
+// System Admin API
+export const systemAdminAPI = {
+  // Create system administrator (special endpoint)
+  createSystemAdmin: (data: {
+    full_name: string
+    email: string
+    password: string
+    role: 'systemAdmin'
+    gender?: string
+  }) => api.post('/auth/create-system-admin', data).then(res => res.data)
+}
+
 // Health check
 export const healthAPI = {
   check: () => api.get('/health').then(res => res.data)

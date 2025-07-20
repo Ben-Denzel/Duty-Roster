@@ -461,10 +461,75 @@ const updateProfile = async (req, res) => {
   }
 };
 
+/**
+ * Create system administrator (special endpoint)
+ */
+const createSystemAdmin = async (req, res) => {
+  try {
+    const { full_name, email, password, gender } = req.body;
+
+    // Validation
+    if (!full_name || !email || !password) {
+      return res.status(400).json({
+        error: 'Validation error',
+        message: 'Full name, email, and password are required'
+      });
+    }
+
+    // Validate password strength
+    if (password.length < 8) {
+      return res.status(400).json({
+        error: 'Validation error',
+        message: 'Password must be at least 8 characters long'
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(409).json({
+        error: 'Conflict',
+        message: 'User with this email already exists'
+      });
+    }
+
+    // Create system admin user
+    const user = await User.create({
+      full_name,
+      email,
+      password_hash: password, // Will be hashed by the model hook
+      role: 'systemAdmin',
+      gender: gender || null,
+      enterprise_id: null, // System admins don't belong to specific enterprises
+      department_id: null,  // System admins don't belong to specific departments
+      is_active: true
+    });
+
+    // Remove password from response
+    const userResponse = user.toJSON();
+    delete userResponse.password_hash;
+
+    res.status(201).json({
+      message: 'System administrator created successfully',
+      user: userResponse
+    });
+
+    console.log(`🔐 New system administrator created: ${full_name} (${email})`);
+
+  } catch (error) {
+    console.error('Create system admin error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to create system administrator'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   getProfile,
   updateProfile,
-  createUser
+  createUser,
+  createSystemAdmin
 };

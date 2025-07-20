@@ -77,6 +77,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/iamasystemadmin',
+      name: 'create-system-admin',
+      component: () => import('../views/CreateSystemAdminView.vue'),
+      meta: { requiresAuth: false } // No auth required for this special endpoint
+    },
+    {
       path: '/notifications/preferences',
       name: 'notification-preferences',
       component: () => import('../views/NotificationPreferencesView.vue'),
