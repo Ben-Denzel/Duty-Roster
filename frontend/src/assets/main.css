@@ -4,7 +4,153 @@
 
 @import './base.css';
 
+/* SchedulaX Enhanced Dark Theme Variables */
+:root {
+  /* Light theme colors */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8fafc;
+  --color-bg-tertiary: #f1f5f9;
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-text-tertiary: #94a3b8;
+  --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
+  --color-accent: #3b82f6;
+  --color-accent-hover: #2563eb;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+}
+
+[data-theme="dark"] {
+  /* Enhanced dark theme colors - warmer and more modern */
+  --color-bg-primary: #111827;    /* Warmer dark gray */
+  --color-bg-secondary: #1f2937;  /* Slightly lighter */
+  --color-bg-tertiary: #374151;   /* Card backgrounds */
+  --color-text-primary: #f9fafb;  /* Pure white text */
+  --color-text-secondary: #d1d5db; /* Light gray text */
+  --color-text-tertiary: #9ca3af;  /* Muted text */
+  --color-border: #374151;        /* Subtle borders */
+  --color-border-light: #4b5563;  /* Lighter borders */
+  --color-accent: #3b82f6;        /* Keep blue accent */
+  --color-accent-hover: #60a5fa;  /* Lighter blue on hover */
+  --color-success: #34d399;       /* Brighter green */
+  --color-warning: #fbbf24;       /* Brighter yellow */
+  --color-error: #f87171;         /* Softer red */
+}
+
 #app {
   min-height: 100vh;
   font-weight: normal;
+}
+
+/* SchedulaX Enhanced Utilities */
+@layer utilities {
+  /* Mobile-first responsive text */
+  .text-responsive-sm {
+    @apply text-sm sm:text-base;
+  }
+
+  .text-responsive-base {
+    @apply text-base sm:text-lg;
+  }
+
+  .text-responsive-lg {
+    @apply text-lg sm:text-xl;
+  }
+
+  .text-responsive-xl {
+    @apply text-xl sm:text-2xl;
+  }
+
+  .text-responsive-2xl {
+    @apply text-2xl sm:text-3xl;
+  }
+
+  /* Touch-friendly buttons */
+  .btn-touch {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Mobile-friendly cards */
+  .card-responsive {
+    @apply p-4 sm:p-6 rounded-lg sm:rounded-xl;
+  }
+
+  /* Enhanced Dark Mode Navigation */
+  .nav-link {
+    @apply group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200;
+  }
+
+  .nav-link-inactive {
+    @apply text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white;
+  }
+
+  .nav-link-active {
+    @apply bg-blue-50 text-blue-700 border-r-2 border-blue-600 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-400;
+  }
+
+  .nav-icon-inactive {
+    @apply text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-300;
+  }
+
+  .nav-icon-active {
+    @apply text-blue-500 dark:text-blue-400;
+  }
+
+  /* Section headers */
+  .nav-section-header {
+    @apply text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400;
+  }
+
+  /* Enhanced cards */
+  .card-enhanced {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-200;
+  }
+
+  .card-enhanced:hover {
+    @apply shadow-md dark:shadow-xl;
+  }
+}
+
+/* Custom scrollbar for webkit browsers */
+@layer base {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  /* Ensure tables are scrollable on mobile */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Mobile-friendly form inputs */
+  input, select, textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  /* Mobile-friendly modals */
+  .modal-mobile {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
 }

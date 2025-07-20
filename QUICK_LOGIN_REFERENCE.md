@@ -1,4 +1,4 @@
-# Quick Login Reference Card
+# SchedulaX - Quick Login Reference Card
 
 **⚠️ DATABASE CLEANED - SAMPLE DATA REMOVED ⚠️**
 

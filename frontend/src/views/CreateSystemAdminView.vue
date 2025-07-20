@@ -139,7 +139,7 @@
               </div>
               <div class="ml-3">
                 <p class="text-sm text-yellow-800">
-                  <strong>Warning:</strong> System administrators have full access to the entire platform. 
+                  <strong>Warning:</strong> System administrators have full access to the entire platform.
                   Only create system admin accounts for trusted personnel.
                 </p>
               </div>
@@ -229,9 +229,9 @@ const createSystemAdmin = async () => {
     }
 
     const response = await systemAdminAPI.createSystemAdmin(data)
-    
+
     successMessage.value = `System administrator "${form.full_name}" created successfully! Admin ID: ${response.user.id}`
-    
+
     // Reset form
     Object.keys(form).forEach(key => {
       form[key] = ''

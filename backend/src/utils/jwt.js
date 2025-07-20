@@ -19,7 +19,7 @@ const generateToken = (user) => {
 
   return jwt.sign(payload, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
-    issuer: 'duty-roster-api'
+    issuer: 'schedulax-api'
   });
 };
 

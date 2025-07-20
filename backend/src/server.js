@@ -24,9 +24,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'Duty Roster API is running',
+  res.json({
+    status: 'OK',
+    message: 'SchedulaX API is running',
     timestamp: new Date().toISOString()
   });
 });

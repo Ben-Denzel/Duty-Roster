@@ -1,7 +1,7 @@
 {
-  "name": "duty-roster-backend",
+  "name": "schedulax-backend",
   "version": "1.0.0",
-  "description": "Backend API for Multi-Enterprise Duty Roster Management System",
+  "description": "Backend API for Multi-Enterprise SchedulaX Management System",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -14,11 +14,13 @@
     "notifications:cleanup": "node -e \"require('./src/services/NotificationCleanupService').runCleanup().then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); })\""
   },
   "keywords": [
+    "schedulax",
     "duty",
     "roster",
     "management",
     "enterprise",
-    "shifts"
+    "shifts",
+    "scheduling"
   ],
   "author": "",
   "license": "ISC",

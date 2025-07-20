@@ -1,8 +1,13 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+    <!-- Theme Toggle (Top Right) -->
+    <div class="absolute top-4 right-4 z-50">
+      <ThemeToggle :showDropdown="true" />
+    </div>
+
     <div class="min-h-screen flex">
       <!-- Left side - Branding -->
-      <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-indigo-700 relative overflow-hidden">
+      <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-gray-800 dark:to-gray-900 relative overflow-hidden">
         <div class="absolute inset-0 bg-black opacity-20"></div>
         <div class="relative z-10 flex flex-col justify-center px-12 text-white">
           <div class="mb-8">
@@ -12,7 +17,7 @@
                   <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
                 </svg>
               </div>
-              <h1 class="text-3xl font-bold">DutyRoster</h1>
+              <h1 class="text-3xl font-bold">SchedulaX</h1>
             </div>
             <h2 class="text-4xl font-bold leading-tight mb-4">
               Professional Duty Management
@@ -42,7 +47,7 @@
       </div>
 
       <!-- Right side - Login Form -->
-      <div class="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24">
+      <div class="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24 bg-white dark:bg-gray-800 transition-colors duration-300">
         <div class="mx-auto w-full max-w-sm lg:w-96">
           <div class="text-center lg:text-left">
             <div class="flex items-center justify-center lg:justify-start mb-6 lg:hidden">
@@ -51,19 +56,19 @@
                   <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
                 </svg>
               </div>
-              <h1 class="text-2xl font-bold text-gray-900">DutyRoster</h1>
+              <h1 class="text-2xl font-bold text-gray-900 dark:text-white">SchedulaX</h1>
             </div>
-            <h2 class="text-3xl font-bold text-gray-900 mb-2">
+            <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               Welcome back
             </h2>
-            <p class="text-gray-600 mb-8">
+            <p class="text-gray-600 dark:text-gray-300 mb-8">
               Sign in to your account to continue
             </p>
           </div>
           <form class="space-y-6" @submit.prevent="handleLogin">
             <div class="space-y-5">
               <div>
-                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Email address
                 </label>
                 <input
@@ -73,13 +78,13 @@
                   type="email"
                   autocomplete="email"
                   required
-                  class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                  class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                   placeholder="Enter your email"
                 />
               </div>
 
               <div>
-                <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Password
                 </label>
                 <input
@@ -89,7 +94,7 @@
                   type="password"
                   autocomplete="current-password"
                   required
-                  class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                  class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                   placeholder="Enter your password"
                 />
               </div>
@@ -166,6 +171,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()

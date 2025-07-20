@@ -1,4 +1,4 @@
-# Duty Roster Management System - User Credentials
+# SchedulaX Management System - User Credentials
 
 **⚠️ DATABASE STATUS UPDATE ⚠️**
 

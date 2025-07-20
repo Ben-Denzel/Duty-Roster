@@ -8,7 +8,7 @@ const defaultTemplates = [
     email_subject_template: 'New Duty Roster Published - {{roster_name}}',
     email_template: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">New Roster Published</h2>
+        <h2 style="color: #2563eb;">SchedulaX - New Roster Published</h2>
         <p>Hello {{user_name}},</p>
         <p>A new duty roster "<strong>{{roster_name}}</strong>" has been published for {{department_name}}.</p>
         <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
