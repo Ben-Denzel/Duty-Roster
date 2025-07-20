@@ -80,8 +80,23 @@ export const authAPI = {
   createUser: (data: RegisterRequest): Promise<{ message: string; user: User }> =>
     api.post('/auth/create-user', data).then(res => res.data),
 
-  getProfile: (): Promise<{ user: User }> =>
+  getProfile: (): Promise<{ user: User & {
+    stats: any;
+    recentNotifications: any[];
+    unreadNotifications: number;
+    enterprise?: { id: number; name: string; created_at: string };
+    department?: { id: number; name: string; description: string; manager?: { id: number; full_name: string; email: string } };
+  } }> =>
     api.get('/auth/profile').then(res => res.data),
+
+  updateProfile: (data: {
+    full_name: string;
+    email: string;
+    gender?: string;
+    current_password?: string;
+    new_password?: string;
+  }): Promise<{ message: string; user: User }> =>
+    api.put('/auth/profile', data).then(res => res.data),
 
   logout: () => {
     localStorage.removeItem('auth_token')
@@ -131,6 +146,14 @@ export const dashboardAPI = {
   // Get system analytics (for system admins)
   getSystemAnalytics: () =>
     api.get('/dashboard/system').then(res => res.data),
+
+  // Get manager analytics (for managers)
+  getManagerAnalytics: () =>
+    api.get('/dashboard/manager').then(res => res.data),
+
+  // Get employee analytics (for employees)
+  getEmployeeAnalytics: () =>
+    api.get('/dashboard/employee').then(res => res.data),
 }
 
 // Department API
@@ -498,9 +521,136 @@ export const employeeAPI = {
   }) => api.patch(`/employee/swap-requests/${swapRequestId}/manager-action`, data).then(res => res.data)
 }
 
+// Notification interfaces
+export interface Notification {
+  id: number
+  user_id: number
+  type: string
+  title: string
+  message: string
+  data?: any
+  priority: 'low' | 'normal' | 'high' | 'urgent'
+  read_at?: string
+  email_sent: boolean
+  email_sent_at?: string
+  action_url?: string
+  expires_at?: string
+  days_until_cleanup?: number | null
+  created_at: string
+  updated_at: string
+}
+
+export interface NotificationPreferences {
+  id: number
+  user_id: number
+  email_enabled: boolean
+  push_enabled: boolean
+  sound_enabled: boolean
+  desktop_enabled: boolean
+  roster_published: boolean
+  shift_assigned: boolean
+  shift_unassigned: boolean
+  swap_request_received: boolean
+  swap_request_approved: boolean
+  swap_request_rejected: boolean
+  swap_request_cancelled: boolean
+  roster_needs_approval: boolean
+  roster_approved: boolean
+  roster_rejected: boolean
+  schedule_changed: boolean
+  availability_reminder: boolean
+  approval_reminder: boolean
+  system_announcement: boolean
+  welcome: boolean
+  email_frequency: 'immediate' | 'hourly' | 'daily' | 'weekly'
+  email_digest: boolean
+  quiet_hours_enabled: boolean
+  quiet_hours_start?: string
+  quiet_hours_end?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface NotificationResponse {
+  message: string
+  notifications: Notification[]
+  pagination: {
+    current_page: number
+    total_pages: number
+    total_items: number
+    items_per_page: number
+  }
+  unread_count: number
+}
+
+// Notification API
+export const notificationAPI = {
+  // Get notifications
+  getNotifications: (params?: {
+    page?: number
+    limit?: number
+    unread_only?: boolean
+    type?: string
+    include_expired?: boolean
+  }) => api.get<NotificationResponse>('/notifications', { params }).then(res => res.data),
+
+  // Get unread count
+  getUnreadCount: () => api.get<{ unread_count: number }>('/notifications/count').then(res => res.data),
+
+  // Mark notification as read
+  markAsRead: (notificationId: number) =>
+    api.put(`/notifications/${notificationId}/read`).then(res => res.data),
+
+  // Mark all notifications as read
+  markAllAsRead: () => api.put('/notifications/read-all').then(res => res.data),
+
+  // Delete notification
+  deleteNotification: (notificationId: number) =>
+    api.delete(`/notifications/${notificationId}`).then(res => res.data),
+
+  // Get notification preferences
+  getPreferences: () => api.get<{ preferences: NotificationPreferences }>('/notifications/preferences').then(res => res.data),
+
+  // Update notification preferences
+  updatePreferences: (preferences: Partial<NotificationPreferences>) =>
+    api.put('/notifications/preferences', preferences).then(res => res.data),
+
+  // Create test notification (admin only)
+  createTestNotification: (data: { type: string; variables?: any; overrides?: any }) =>
+    api.post('/notifications/test', data).then(res => res.data),
+
+  // Get notification statistics (admin only)
+  getStats: () => api.get('/notifications/stats').then(res => res.data),
+
+  // Cleanup old notifications (system admin only)
+  cleanup: (options?: { days_after_read?: number; days_unread?: number }) =>
+    api.post('/notifications/cleanup', options).then(res => res.data)
+}
+
 // Health check
 export const healthAPI = {
   check: () => api.get('/health').then(res => res.data)
+}
+
+// System Settings API
+export const systemSettingsAPI = {
+  getSettings: (): Promise<{
+    message: string;
+    settings: {
+      statistics: any;
+      configuration: any;
+    };
+  }> =>
+    api.get('/system-settings').then(res => res.data),
+
+  updateSettings: (configuration: any): Promise<{ message: string; updatedSections: string[] }> =>
+    api.put('/system-settings', { configuration }).then(res => res.data),
+
+  performMaintenance: (task: string, parameters?: any): Promise<{ message: string; result: any }> =>
+    api.post('/system-settings/maintenance', { task, parameters }).then(res => res.data),
+
+  getLogs: (params?: { limit?: number; level?: string }): Promise<{ message: string; logs: any[] }> =>
+    api.get('/system-settings/logs', { params }).then(res => res.data)
 }
 
 export default api

@@ -7,6 +7,9 @@ const Shift = require('./Shift');
 const ShiftAssignment = require('./ShiftAssignment');
 const SwapRequest = require('./SwapRequest');
 const Availability = require('./Availability');
+const Notification = require('./Notification');
+const NotificationPreferences = require('./NotificationPreferences');
+const NotificationTemplate = require('./NotificationTemplate');
 
 // Define associations
 Enterprise.hasMany(User, { foreignKey: 'enterprise_id', as: 'users' });
@@ -59,6 +62,14 @@ User.hasMany(SwapRequest, { foreignKey: 'manager_id', as: 'managed_swaps' });
 Availability.belongsTo(User, { foreignKey: 'employee_id', as: 'employee' });
 User.hasMany(Availability, { foreignKey: 'employee_id', as: 'availability' });
 
+// Notification associations
+Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(Notification, { foreignKey: 'user_id', as: 'notifications' });
+
+// NotificationPreferences associations
+NotificationPreferences.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasOne(NotificationPreferences, { foreignKey: 'user_id', as: 'notification_preferences' });
+
 module.exports = {
   sequelize,
   User,
@@ -68,5 +79,8 @@ module.exports = {
   Shift,
   ShiftAssignment,
   SwapRequest,
-  Availability
+  Availability,
+  Notification,
+  NotificationPreferences,
+  NotificationTemplate
 };

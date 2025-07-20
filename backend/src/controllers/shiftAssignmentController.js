@@ -1,6 +1,7 @@
 const { Shift, ShiftAssignment, User, Roster, Department, Availability } = require('../models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../config/database');
+const EventTriggerService = require('../services/EventTriggerService');
 
 /**
  * Get all assignments for a shift
@@ -277,6 +278,14 @@ const assignEmployee = async (req, res) => {
 
     await transaction.commit();
 
+    // Send assignment notification
+    try {
+      await EventTriggerService.onShiftAssigned(createdAssignment);
+    } catch (notificationError) {
+      console.error('Error sending assignment notification:', notificationError);
+      // Don't fail the request if notifications fail
+    }
+
     res.status(201).json({
       message: 'Employee assigned to shift successfully',
       assignment: createdAssignment
@@ -379,6 +388,14 @@ const unassignEmployee = async (req, res) => {
         error: 'Invalid operation',
         message: 'Cannot modify assignments for published rosters'
       });
+    }
+
+    // Send unassignment notification before deleting
+    try {
+      await EventTriggerService.onShiftUnassigned(assignment);
+    } catch (notificationError) {
+      console.error('Error sending unassignment notification:', notificationError);
+      // Don't fail the request if notifications fail
     }
 
     // Delete the assignment

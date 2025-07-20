@@ -180,11 +180,41 @@ const login = async (req, res) => {
 };
 
 /**
- * Get current user profile
+ * Get current user profile with detailed information
  */
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findByPk(req.user.id);
+    const { Op } = require('sequelize');
+    const Enterprise = require('../models/Enterprise');
+    const Department = require('../models/Department');
+    const Roster = require('../models/Roster');
+    const ShiftAssignment = require('../models/ShiftAssignment');
+    const Shift = require('../models/Shift');
+    const SwapRequest = require('../models/SwapRequest');
+    const Notification = require('../models/Notification');
+
+    const user = await User.findByPk(req.user.id, {
+      include: [
+        {
+          model: Enterprise,
+          as: 'enterprise',
+          attributes: ['id', 'name', 'created_at']
+        },
+        {
+          model: Department,
+          as: 'department',
+          attributes: ['id', 'name', 'description'],
+          include: [
+            {
+              model: User,
+              as: 'manager',
+              attributes: ['id', 'full_name', 'email']
+            }
+          ]
+        }
+      ]
+    });
+
     if (!user) {
       return res.status(404).json({
         error: 'Not found',
@@ -192,8 +222,143 @@ const getProfile = async (req, res) => {
       });
     }
 
+    // Get role-specific statistics
+    let profileStats = {};
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    if (user.role === 'systemAdmin') {
+      // System admin stats
+      const totalEnterprises = await Enterprise.count();
+      const totalUsers = await User.count();
+      const totalDepartments = await Department.count();
+      const recentUsers = await User.count({
+        where: { created_at: { [Op.gte]: thirtyDaysAgo } }
+      });
+
+      profileStats = {
+        totalEnterprises,
+        totalUsers,
+        totalDepartments,
+        recentUsers,
+        accountAge: Math.floor((new Date() - new Date(user.created_at)) / (1000 * 60 * 60 * 24))
+      };
+
+    } else if (user.role === 'enterpriseAdmin') {
+      // Enterprise admin stats
+      const enterpriseUsers = await User.count({
+        where: { enterprise_id: user.enterprise_id }
+      });
+      const enterpriseDepartments = await Department.count({
+        where: { enterprise_id: user.enterprise_id }
+      });
+      const recentRosters = await Roster.count({
+        where: {
+          created_at: { [Op.gte]: thirtyDaysAgo },
+          department_id: {
+            [Op.in]: await Department.findAll({
+              where: { enterprise_id: user.enterprise_id },
+              attributes: ['id']
+            }).then(depts => depts.map(d => d.id))
+          }
+        }
+      });
+
+      profileStats = {
+        enterpriseUsers,
+        enterpriseDepartments,
+        recentRosters,
+        accountAge: Math.floor((new Date() - new Date(user.created_at)) / (1000 * 60 * 60 * 24))
+      };
+
+    } else if (user.role === 'manager') {
+      // Manager stats
+      const teamMembers = await User.count({
+        where: { department_id: user.department_id }
+      });
+      const myRosters = await Roster.count({
+        where: {
+          department_id: user.department_id,
+          created_by: user.id
+        }
+      });
+      const pendingApprovals = await Roster.count({
+        where: {
+          department_id: user.department_id,
+          status: 'review'
+        }
+      });
+
+      profileStats = {
+        teamMembers,
+        myRosters,
+        pendingApprovals,
+        accountAge: Math.floor((new Date() - new Date(user.created_at)) / (1000 * 60 * 60 * 24))
+      };
+
+    } else if (user.role === 'employee') {
+      // Employee stats
+      const totalAssignments = await ShiftAssignment.count({
+        where: { employee_id: user.id }
+      });
+      const confirmedAssignments = await ShiftAssignment.count({
+        where: {
+          employee_id: user.id,
+          status: 'confirmed'
+        }
+      });
+      const swapRequestsMade = await SwapRequest.count({
+        where: { requested_by: user.id }
+      });
+      const upcomingShifts = await ShiftAssignment.count({
+        where: {
+          employee_id: user.id,
+          status: 'confirmed'
+        },
+        include: [
+          {
+            model: Shift,
+            as: 'shift',
+            where: { date: { [Op.gte]: new Date() } }
+          }
+        ]
+      });
+
+      profileStats = {
+        totalAssignments,
+        confirmedAssignments,
+        swapRequestsMade,
+        upcomingShifts,
+        acceptanceRate: totalAssignments > 0 ? Math.round((confirmedAssignments / totalAssignments) * 100) : 0,
+        accountAge: Math.floor((new Date() - new Date(user.created_at)) / (1000 * 60 * 60 * 24))
+      };
+    }
+
+    // Get recent notifications
+    const recentNotifications = await Notification.findAll({
+      where: { user_id: user.id },
+      order: [['created_at', 'DESC']],
+      limit: 5,
+      attributes: ['id', 'title', 'message', 'type', 'read_at', 'created_at']
+    });
+
+    // Get unread notification count
+    const unreadNotifications = await Notification.count({
+      where: {
+        user_id: user.id,
+        read_at: null
+      }
+    });
+
+    const profileData = {
+      ...user.toJSON(),
+      stats: profileStats,
+      recentNotifications,
+      unreadNotifications
+    };
+
     res.json({
-      user: user.toJSON()
+      user: profileData
     });
 
   } catch (error) {
@@ -207,9 +372,99 @@ const getProfile = async (req, res) => {
 
 
 
+/**
+ * Update current user profile
+ */
+const updateProfile = async (req, res) => {
+  try {
+    const { full_name, email, gender, current_password, new_password } = req.body;
+    const bcrypt = require('bcryptjs');
+
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({
+        error: 'Not found',
+        message: 'User not found'
+      });
+    }
+
+    // Validate input
+    if (!full_name || !email) {
+      return res.status(400).json({
+        error: 'Validation error',
+        message: 'Full name and email are required'
+      });
+    }
+
+    // Check if email is already taken by another user
+    if (email !== user.email) {
+      const existingUser = await User.findOne({
+        where: {
+          email,
+          id: { [require('sequelize').Op.ne]: user.id }
+        }
+      });
+      if (existingUser) {
+        return res.status(409).json({
+          error: 'Conflict',
+          message: 'Email is already taken'
+        });
+      }
+    }
+
+    // Prepare update data
+    const updateData = {
+      full_name,
+      email,
+      gender: gender || null
+    };
+
+    // Handle password change
+    if (new_password) {
+      if (!current_password) {
+        return res.status(400).json({
+          error: 'Validation error',
+          message: 'Current password is required to set new password'
+        });
+      }
+
+      // Verify current password
+      const isValidPassword = await user.validatePassword(current_password);
+      if (!isValidPassword) {
+        return res.status(401).json({
+          error: 'Authentication failed',
+          message: 'Current password is incorrect'
+        });
+      }
+
+      // Hash new password
+      updateData.password_hash = await bcrypt.hash(new_password, 12);
+    }
+
+    // Update user
+    await user.update(updateData);
+
+    // Return updated user data (without password hash)
+    const updatedUser = await User.findByPk(user.id);
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: updatedUser.toJSON()
+    });
+
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to update profile'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   getProfile,
+  updateProfile,
   createUser
 };

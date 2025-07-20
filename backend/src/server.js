@@ -2,12 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const http = require('http');
 require('dotenv').config();
 
 // Initialize database models
 const { sequelize } = require('./models');
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
 // Middleware
@@ -42,6 +44,10 @@ const shiftManagementRoutes = require('./routes/shiftManagement');
 const conflictRoutes = require('./routes/conflicts');
 const approvalRoutes = require('./routes/approvals');
 const employeeRoutes = require('./routes/employee');
+const notificationRoutes = require('./routes/notifications');
+const systemSettingsRoutes = require('./routes/systemSettings');
+const WebSocketService = require('./services/WebSocketService');
+const NotificationCleanupService = require('./services/NotificationCleanupService');
 
 // Use routes
 app.use('/api/auth', authRoutes);
@@ -56,6 +62,8 @@ app.use('/api/shift-management', shiftManagementRoutes);
 app.use('/api/conflicts', conflictRoutes);
 app.use('/api/approvals', approvalRoutes);
 app.use('/api/employee', employeeRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/system-settings', systemSettingsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -85,11 +93,19 @@ const startServer = async () => {
     await sequelize.sync({ alter: true });
     console.log('✅ Database models synchronized successfully.');
 
+    // Initialize WebSocket service
+    WebSocketService.initialize(server);
+
+    // Start notification cleanup service
+    NotificationCleanupService.start(24, 5, 30); // Run every 24 hours, delete read notifications after 5 days, unread after 30 days
+
     // Start server
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
+      console.log(`🔔 WebSocket service initialized`);
+      console.log(`🧹 Notification cleanup service started`);
     });
   } catch (error) {
     console.error('❌ Unable to start server:', error.message);

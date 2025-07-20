@@ -76,10 +76,30 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/about',
-      name: 'about',
-      component: () => import('../views/AboutView.vue'),
+      path: '/notifications',
+      name: 'notifications',
+      component: () => import('../views/NotificationView.vue'),
+      meta: { requiresAuth: true }
     },
+    {
+      path: '/notifications/preferences',
+      name: 'notification-preferences',
+      component: () => import('../views/NotificationPreferencesView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('../views/ProfileView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/system-settings',
+      name: 'system-settings',
+      component: () => import('../views/SystemSettingsView.vue'),
+      meta: { requiresAuth: true, requiresRole: 'systemAdmin' }
+    },
+
   ],
 })
 

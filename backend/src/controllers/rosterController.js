@@ -1,6 +1,7 @@
 const { Roster, Shift, ShiftAssignment, Department, User } = require('../models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../config/database');
+const EventTriggerService = require('../services/EventTriggerService');
 
 /**
  * Get all rosters for a department
@@ -725,7 +726,7 @@ const updateRosterStatus = async (req, res) => {
         {
           model: Department,
           as: 'department',
-          attributes: ['id', 'name']
+          attributes: ['id', 'name', 'enterprise_id']
         },
         {
           model: User,
@@ -740,6 +741,20 @@ const updateRosterStatus = async (req, res) => {
         }
       ]
     });
+
+    // Trigger notifications based on status change
+    try {
+      if (status === 'review') {
+        await EventTriggerService.onRosterNeedsApproval(updatedRoster);
+      } else if (status === 'approved') {
+        await EventTriggerService.onRosterApproved(updatedRoster);
+      } else if (status === 'published') {
+        await EventTriggerService.onRosterPublished(updatedRoster);
+      }
+    } catch (notificationError) {
+      console.error('Error sending notifications:', notificationError);
+      // Don't fail the request if notifications fail
+    }
 
     res.json({
       message: `Roster status updated to ${status}`,

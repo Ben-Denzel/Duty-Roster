@@ -1,7 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
-const { getEnterpriseAnalytics, getSystemAnalytics } = require('../controllers/dashboardController');
+const {
+  getEnterpriseAnalytics,
+  getSystemAnalytics,
+  getManagerAnalytics,
+  getEmployeeAnalytics
+} = require('../controllers/dashboardController');
 
 // Get enterprise analytics (for enterprise admins)
 router.get(
@@ -17,6 +22,22 @@ router.get(
   authenticate,
   authorize(['systemAdmin']),
   getSystemAnalytics
+);
+
+// Get manager analytics (for managers)
+router.get(
+  '/manager',
+  authenticate,
+  authorize(['manager']),
+  getManagerAnalytics
+);
+
+// Get employee analytics (for employees)
+router.get(
+  '/employee',
+  authenticate,
+  authorize(['employee']),
+  getEmployeeAnalytics
 );
 
 module.exports = router;

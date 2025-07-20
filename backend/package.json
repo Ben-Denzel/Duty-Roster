@@ -8,7 +8,10 @@
     "dev": "nodemon src/server.js",
     "test": "jest",
     "test:watch": "jest --watch",
-    "db:setup": "node scripts/setupDatabase.js"
+    "db:setup": "node scripts/setupDatabase.js",
+    "notifications:setup": "node src/scripts/setupNotificationTables.js",
+    "notifications:init": "node src/scripts/initializeNotifications.js",
+    "notifications:cleanup": "node -e \"require('./src/services/NotificationCleanupService').runCleanup().then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); })\""
   },
   "keywords": [
     "duty",
@@ -29,8 +32,10 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
+    "nodemailer": "^6.10.1",
     "pg": "^8.16.3",
-    "sequelize": "^6.37.7"
+    "sequelize": "^6.37.7",
+    "socket.io": "^4.7.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.11",

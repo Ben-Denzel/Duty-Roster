@@ -1,6 +1,7 @@
 const { Roster, Department, User, Shift, ShiftAssignment } = require('../models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../config/database');
+const EventTriggerService = require('../services/EventTriggerService');
 
 /**
  * Get pending approvals for a manager
@@ -180,16 +181,13 @@ const approveRoster = async (req, res) => {
 
     await transaction.commit();
 
-    // TODO: Send notification to roster creator
-    // This would typically involve sending an email or creating a notification record
-
     // Fetch updated roster
     const updatedRoster = await Roster.findByPk(rosterId, {
       include: [
         {
           model: Department,
           as: 'department',
-          attributes: ['id', 'name']
+          attributes: ['id', 'name', 'enterprise_id']
         },
         {
           model: User,
@@ -203,6 +201,14 @@ const approveRoster = async (req, res) => {
         }
       ]
     });
+
+    // Send approval notification
+    try {
+      await EventTriggerService.onRosterApproved(updatedRoster);
+    } catch (notificationError) {
+      console.error('Error sending approval notification:', notificationError);
+      // Don't fail the request if notifications fail
+    }
 
     res.json({
       message: 'Roster approved successfully',
@@ -309,16 +315,13 @@ const rejectRoster = async (req, res) => {
 
     await transaction.commit();
 
-    // TODO: Send notification to roster creator
-    // This would typically involve sending an email or creating a notification record
-
     // Fetch updated roster
     const updatedRoster = await Roster.findByPk(rosterId, {
       include: [
         {
           model: Department,
           as: 'department',
-          attributes: ['id', 'name']
+          attributes: ['id', 'name', 'enterprise_id']
         },
         {
           model: User,
@@ -327,6 +330,14 @@ const rejectRoster = async (req, res) => {
         }
       ]
     });
+
+    // Send rejection notification
+    try {
+      await EventTriggerService.onRosterRejected(updatedRoster, notes);
+    } catch (notificationError) {
+      console.error('Error sending rejection notification:', notificationError);
+      // Don't fail the request if notifications fail
+    }
 
     res.json({
       message: 'Roster rejected and returned to draft status',
@@ -543,6 +554,24 @@ const submitForApproval = async (req, res) => {
     }, { transaction });
 
     await transaction.commit();
+
+    // Send approval request notification
+    try {
+      const rosterWithIncludes = await Roster.findByPk(roster.id, {
+        include: [
+          {
+            model: Department,
+            as: 'department',
+            attributes: ['id', 'name', 'enterprise_id']
+          },
+          { model: User, as: 'creator' }
+        ]
+      });
+      await EventTriggerService.onRosterNeedsApproval(rosterWithIncludes);
+    } catch (notificationError) {
+      console.error('Error sending approval request notification:', notificationError);
+      // Don't fail the request if notifications fail
+    }
 
     res.status(200).json({
       message: 'Roster submitted for approval successfully',

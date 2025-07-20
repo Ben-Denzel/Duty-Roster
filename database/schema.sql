@@ -119,9 +119,97 @@ CREATE TABLE IF NOT EXISTS swap_requests (
 CREATE TABLE IF NOT EXISTS notifications (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  type VARCHAR(50) CHECK (type IN (
+    'roster_published',
+    'shift_assigned',
+    'shift_unassigned',
+    'swap_request_received',
+    'swap_request_approved',
+    'swap_request_rejected',
+    'swap_request_cancelled',
+    'roster_needs_approval',
+    'roster_approved',
+    'roster_rejected',
+    'schedule_changed',
+    'availability_reminder',
+    'approval_reminder',
+    'system_announcement',
+    'welcome'
+  )) NOT NULL,
+  title VARCHAR(200) NOT NULL,
   message TEXT NOT NULL,
-  type VARCHAR(20) NOT NULL,
-  read BOOLEAN DEFAULT FALSE,
+  data JSON DEFAULT '{}',
+  priority VARCHAR(10) CHECK (priority IN ('low', 'normal', 'high', 'urgent')) DEFAULT 'normal',
+  read_at TIMESTAMP,
+  email_sent BOOLEAN DEFAULT FALSE,
+  email_sent_at TIMESTAMP,
+  action_url VARCHAR(500),
+  expires_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- NOTIFICATION PREFERENCES
+CREATE TABLE IF NOT EXISTS notification_preferences (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  email_enabled BOOLEAN DEFAULT TRUE,
+  push_enabled BOOLEAN DEFAULT TRUE,
+  sound_enabled BOOLEAN DEFAULT TRUE,
+  desktop_enabled BOOLEAN DEFAULT TRUE,
+  roster_published BOOLEAN DEFAULT TRUE,
+  shift_assigned BOOLEAN DEFAULT TRUE,
+  shift_unassigned BOOLEAN DEFAULT TRUE,
+  swap_request_received BOOLEAN DEFAULT TRUE,
+  swap_request_approved BOOLEAN DEFAULT TRUE,
+  swap_request_rejected BOOLEAN DEFAULT TRUE,
+  swap_request_cancelled BOOLEAN DEFAULT TRUE,
+  roster_needs_approval BOOLEAN DEFAULT TRUE,
+  roster_approved BOOLEAN DEFAULT TRUE,
+  roster_rejected BOOLEAN DEFAULT TRUE,
+  schedule_changed BOOLEAN DEFAULT TRUE,
+  availability_reminder BOOLEAN DEFAULT TRUE,
+  approval_reminder BOOLEAN DEFAULT TRUE,
+  system_announcement BOOLEAN DEFAULT TRUE,
+  welcome BOOLEAN DEFAULT TRUE,
+  email_frequency VARCHAR(20) CHECK (email_frequency IN ('immediate', 'hourly', 'daily', 'weekly')) DEFAULT 'immediate',
+  email_digest BOOLEAN DEFAULT FALSE,
+  quiet_hours_enabled BOOLEAN DEFAULT FALSE,
+  quiet_hours_start TIME DEFAULT '22:00:00',
+  quiet_hours_end TIME DEFAULT '08:00:00',
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- NOTIFICATION TEMPLATES
+CREATE TABLE IF NOT EXISTS notification_templates (
+  id SERIAL PRIMARY KEY,
+  type VARCHAR(50) UNIQUE CHECK (type IN (
+    'roster_published',
+    'shift_assigned',
+    'shift_unassigned',
+    'swap_request_received',
+    'swap_request_approved',
+    'swap_request_rejected',
+    'swap_request_cancelled',
+    'roster_needs_approval',
+    'roster_approved',
+    'roster_rejected',
+    'schedule_changed',
+    'availability_reminder',
+    'approval_reminder',
+    'system_announcement',
+    'welcome'
+  )) NOT NULL,
+  title_template VARCHAR(200) NOT NULL,
+  message_template TEXT NOT NULL,
+  email_subject_template VARCHAR(200),
+  email_template TEXT,
+  priority VARCHAR(10) CHECK (priority IN ('low', 'normal', 'high', 'urgent')) DEFAULT 'normal',
+  action_url_template VARCHAR(500),
+  expires_in_hours INTEGER CHECK (expires_in_hours > 0 AND expires_in_hours <= 8760),
+  is_active BOOLEAN DEFAULT TRUE,
+  variables JSON DEFAULT '[]',
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -141,5 +229,18 @@ CREATE INDEX IF NOT EXISTS idx_shift_assignments_employee_id ON shift_assignment
 CREATE INDEX IF NOT EXISTS idx_availability_employee_id ON availability(employee_id);
 CREATE INDEX IF NOT EXISTS idx_swap_requests_shift_id ON swap_requests(shift_id);
 CREATE INDEX IF NOT EXISTS idx_swap_requests_status ON swap_requests(status);
+
+-- Notification indexes
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
+CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
+CREATE INDEX IF NOT EXISTS idx_notifications_read_at ON notifications(read_at);
+CREATE INDEX IF NOT EXISTS idx_notifications_priority ON notifications(priority);
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at);
+CREATE INDEX IF NOT EXISTS idx_notifications_expires_at ON notifications(expires_at);
+
+-- Notification preferences indexes
+CREATE INDEX IF NOT EXISTS idx_notification_preferences_user_id ON notification_preferences(user_id);
+
+-- Notification templates indexes
+CREATE INDEX IF NOT EXISTS idx_notification_templates_type ON notification_templates(type);
+CREATE INDEX IF NOT EXISTS idx_notification_templates_is_active ON notification_templates(is_active);

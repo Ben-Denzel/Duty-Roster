@@ -35,7 +35,7 @@
             <div class="px-3 py-2">
               <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">System Administration</h3>
             </div>
-            
+
             <router-link
               to="/enterprises"
               class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200"
@@ -64,7 +64,7 @@
             <div class="px-3 py-2">
               <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Enterprise Management</h3>
             </div>
-            
+
             <router-link
               to="/users"
               class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200"
@@ -104,7 +104,7 @@
             <div class="px-3 py-2">
               <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Department Management</h3>
             </div>
-            
+
             <router-link
               to="/roster-approvals"
               class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200"
@@ -126,6 +126,8 @@
               </svg>
               Shift Swaps
             </router-link>
+
+
           </div>
 
           <!-- Employee Section -->
@@ -133,7 +135,7 @@
             <div class="px-3 py-2">
               <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Employee Portal</h3>
             </div>
-            
+
             <router-link
               to="/my-schedule"
               class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200"
@@ -166,6 +168,17 @@
               </svg>
               Shift Swaps
             </router-link>
+
+            <router-link
+              to="/my-analytics"
+              class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200"
+              :class="$route.path === '/my-analytics' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'"
+            >
+              <svg class="mr-3 h-5 w-5" :class="$route.path === '/my-analytics' ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+              </svg>
+              My Analytics
+            </router-link>
           </div>
 
           <!-- Common Section -->
@@ -179,7 +192,6 @@
                 <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
               </svg>
               Notifications
-              <span v-if="notificationCount > 0" class="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">{{ notificationCount }}</span>
             </router-link>
 
             <router-link
@@ -198,15 +210,20 @@
         <!-- User Info -->
         <div class="flex-shrink-0 flex border-t border-gray-200 p-4">
           <div class="flex items-center w-full">
-            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-              <span class="text-sm font-medium text-white">
-                {{ authStore.user?.full_name?.charAt(0).toUpperCase() }}
-              </span>
-            </div>
-            <div class="ml-3 flex-1">
-              <p class="text-sm font-medium text-gray-900 truncate">{{ authStore.user?.full_name }}</p>
-              <p class="text-xs text-gray-500 truncate">{{ roleDisplay }}</p>
-            </div>
+            <router-link
+              to="/profile"
+              class="flex items-center flex-1 hover:bg-gray-50 rounded-lg p-2 transition-colors duration-200"
+            >
+              <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                <span class="text-sm font-medium text-white">
+                  {{ authStore.user?.full_name?.charAt(0).toUpperCase() }}
+                </span>
+              </div>
+              <div class="ml-3 flex-1">
+                <p class="text-sm font-medium text-gray-900 truncate">{{ authStore.user?.full_name }}</p>
+                <p class="text-xs text-gray-500 truncate">{{ roleDisplay }}</p>
+              </div>
+            </router-link>
             <button
               @click="handleLogout"
               class="ml-2 p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
@@ -252,15 +269,10 @@
             <div class="flex items-center">
               <h1 class="text-xl font-semibold text-gray-900">{{ pageTitle }}</h1>
             </div>
-            
+
             <div class="flex items-center space-x-4">
               <!-- Notifications -->
-              <button class="p-2 text-gray-400 hover:text-gray-500 relative">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM10.5 3.75a6 6 0 0 1 6 6v2.25l2.25 2.25v2.25H2.25v-2.25L4.5 12V9.75a6 6 0 0 1 6-6z"/>
-                </svg>
-                <span v-if="notificationCount > 0" class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400"></span>
-              </button>
+              <NotificationBell />
 
               <!-- User menu -->
               <div class="hidden lg:flex items-center space-x-3">
@@ -291,13 +303,13 @@
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import NotificationBell from './NotificationBell.vue'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
 const mobileMenuOpen = ref(false)
-const notificationCount = ref(3) // Mock notification count
 
 const roleDisplay = computed(() => {
   switch (authStore.user?.role) {

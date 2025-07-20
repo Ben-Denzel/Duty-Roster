@@ -1,6 +1,7 @@
 const { SwapRequest, Shift, ShiftAssignment, User, Roster, Department } = require('../models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../config/database');
+const EventTriggerService = require('../services/EventTriggerService');
 
 /**
  * Get swap requests for an employee (both sent and received)
@@ -323,6 +324,14 @@ const createSwapRequest = async (req, res) => {
       ]
     });
 
+    // Send swap request notification
+    try {
+      await EventTriggerService.onSwapRequestCreated(createdSwapRequest);
+    } catch (notificationError) {
+      console.error('Error sending swap request notification:', notificationError);
+      // Don't fail the request if notifications fail
+    }
+
     res.status(201).json({
       message: 'Swap request created successfully',
       swap_request: createdSwapRequest
@@ -633,6 +642,18 @@ const managerApproveSwapRequest = async (req, res) => {
         }
       ]
     });
+
+    // Send approval/rejection notification
+    try {
+      if (action === 'approve') {
+        await EventTriggerService.onSwapRequestApproved(updatedSwapRequest);
+      } else {
+        await EventTriggerService.onSwapRequestRejected(updatedSwapRequest, message);
+      }
+    } catch (notificationError) {
+      console.error('Error sending swap request decision notification:', notificationError);
+      // Don't fail the request if notifications fail
+    }
 
     res.json({
       message: `Swap request ${action}d successfully`,
