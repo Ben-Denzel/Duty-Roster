@@ -6,7 +6,7 @@ const Roster = require('./Roster');
 const Shift = require('./Shift');
 const ShiftAssignment = require('./ShiftAssignment');
 const SwapRequest = require('./SwapRequest');
-const Availability = require('./Availability');
+
 const Notification = require('./Notification');
 const NotificationPreferences = require('./NotificationPreferences');
 const NotificationTemplate = require('./NotificationTemplate');
@@ -58,9 +58,7 @@ User.hasMany(SwapRequest, { foreignKey: 'requested_by', as: 'requested_swaps' })
 User.hasMany(SwapRequest, { foreignKey: 'target_employee_id', as: 'target_swaps' });
 User.hasMany(SwapRequest, { foreignKey: 'manager_id', as: 'managed_swaps' });
 
-// Availability associations
-Availability.belongsTo(User, { foreignKey: 'employee_id', as: 'employee' });
-User.hasMany(Availability, { foreignKey: 'employee_id', as: 'availability' });
+
 
 // Notification associations
 Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
@@ -79,7 +77,7 @@ module.exports = {
   Shift,
   ShiftAssignment,
   SwapRequest,
-  Availability,
+
   Notification,
   NotificationPreferences,
   NotificationTemplate

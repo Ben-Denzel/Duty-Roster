@@ -74,7 +74,7 @@ const getSystemSettings = async (req, res) => {
         enterprise_registration: true,
         email_notifications: true,
         shift_swapping: true,
-        availability_management: true,
+
         roster_templates: true
       },
       

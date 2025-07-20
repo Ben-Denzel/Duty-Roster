@@ -31,6 +31,19 @@ The database now contains sample data that has been added back. If you're experi
 - **Access:** Team management, roster creation, shift assignments
 - **Features:** Department dashboard, team analytics, roster management
 
+---
+
+## 👥 **Employee Account**
+
+### Engineering Employee
+- **Email:** `eng2@dt.com`
+- **Name:** eng2
+- **Password:** `password123`
+- **Role:** Employee
+- **Department:** Engineering (SIANTOU Enterprise)
+- **Access:** Personal schedule, shift confirmations, swap requests
+- **Features:** Employee dashboard, shift swapping
+
 ## 🔄 **Troubleshooting Dashboard Issues**
 
 If you're experiencing 500 errors or dashboard loading issues:

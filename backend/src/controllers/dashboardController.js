@@ -1,4 +1,4 @@
-const { User, Department, Enterprise, Roster, Shift, ShiftAssignment, SwapRequest, Availability, Notification } = require('../models');
+const { User, Department, Enterprise, Roster, Shift, ShiftAssignment, SwapRequest, Notification } = require('../models');
 const { Op, fn, col, literal } = require('sequelize');
 
 /**
@@ -508,19 +508,7 @@ const getManagerAnalytics = async (req, res) => {
       ]
     });
 
-    // Get recent availability submissions
-    const recentAvailability = await Availability.count({
-      where: {
-        date: { [Op.gte]: thirtyDaysAgo }
-      },
-      include: [
-        {
-          model: User,
-          as: 'employee',
-          where: { department_id: user.department_id }
-        }
-      ]
-    });
+
 
     // Get team members with details
     const teamMembers = await User.findAll({
@@ -566,8 +554,7 @@ const getManagerAnalytics = async (req, res) => {
       totalSwapRequests,
       pendingSwapRequests,
 
-      // Availability stats
-      recentAvailability,
+
 
       // Coverage metrics
       shiftCoverageRate: totalShifts > 0 ? Math.round((confirmedShifts / totalShifts) * 100) : 0,
@@ -668,7 +655,7 @@ const getEmployeeAnalytics = async (req, res) => {
     const pendingShifts = await ShiftAssignment.count({
       where: {
         employee_id: user.id,
-        status: 'pending'
+        status: 'assigned'  // 'assigned' represents pending/unconfirmed assignments
       },
       include: [
         {
@@ -683,12 +670,12 @@ const getEmployeeAnalytics = async (req, res) => {
 
     // Get swap requests made by employee
     const swapRequestsMade = await SwapRequest.count({
-      where: { requester_id: user.id }
+      where: { requested_by: user.id }
     });
 
     const pendingSwapRequests = await SwapRequest.count({
       where: {
-        requester_id: user.id,
+        requested_by: user.id,
         status: 'pending'
       }
     });
@@ -698,19 +685,13 @@ const getEmployeeAnalytics = async (req, res) => {
       where: { target_employee_id: user.id }
     });
 
-    // Get availability submissions (last 30 days)
-    const availabilitySubmissions = await Availability.count({
-      where: {
-        employee_id: user.id,
-        date: { [Op.gte]: thirtyDaysAgo }
-      }
-    });
+
 
     // Get unread notifications
     const unreadNotifications = await Notification.count({
       where: {
         user_id: user.id,
-        is_read: false
+        read_at: null  // null means unread
       }
     });
 
@@ -745,7 +726,7 @@ const getEmployeeAnalytics = async (req, res) => {
     const recentSwapRequests = await SwapRequest.findAll({
       where: {
         [Op.or]: [
-          { requester_id: user.id },
+          { requested_by: user.id },
           { target_employee_id: user.id }
         ]
       },
@@ -757,7 +738,7 @@ const getEmployeeAnalytics = async (req, res) => {
         },
         {
           model: User,
-          as: 'targetEmployee',
+          as: 'target_employee',
           attributes: ['id', 'full_name']
         }
       ],
@@ -793,7 +774,6 @@ const getEmployeeAnalytics = async (req, res) => {
       swapRequestsReceived,
 
       // Engagement stats
-      availabilitySubmissions,
       unreadNotifications,
 
       // Performance metrics

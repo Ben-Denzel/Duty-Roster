@@ -3,9 +3,7 @@ const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const {
   getMySchedule,
-  updateAssignmentStatus,
-  getMyAvailability,
-  setAvailability
+  updateAssignmentStatus
 } = require('../controllers/employeeController');
 const {
   getMySwapRequests,
@@ -29,21 +27,6 @@ router.patch(
   authenticate,
   authorize(['employee', 'manager', 'enterpriseAdmin', 'systemAdmin']),
   updateAssignmentStatus
-);
-
-// Availability Routes
-router.get(
-  '/my-availability',
-  authenticate,
-  authorize(['employee', 'manager', 'enterpriseAdmin', 'systemAdmin']),
-  getMyAvailability
-);
-
-router.post(
-  '/availability',
-  authenticate,
-  authorize(['employee', 'manager', 'enterpriseAdmin', 'systemAdmin']),
-  setAvailability
 );
 
 // Swap Request Routes

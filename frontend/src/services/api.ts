@@ -463,26 +463,7 @@ export const employeeAPI = {
     notes?: string
   }) => api.patch(`/employee/assignments/${assignmentId}/status`, data).then(res => res.data),
 
-  // Get personal availability
-  getMyAvailability: (params?: {
-    start_date?: string
-    end_date?: string
-    type?: 'available' | 'unavailable' | 'preferred' | 'limited'
-  }) => api.get('/employee/my-availability', { params }).then(res => res.data),
 
-  // Set availability preference
-  setAvailability: (data: {
-    date: string
-    availability_type: 'available' | 'unavailable' | 'preferred' | 'limited'
-    start_time?: string
-    end_time?: string
-    shift_types?: string[]
-    max_hours?: number
-    reason?: string
-    notes?: string
-    is_recurring?: boolean
-    recurrence_pattern?: any
-  }) => api.post('/employee/availability', data).then(res => res.data),
 
   // Get swap requests
   getSwapRequests: (params?: {
@@ -558,7 +539,7 @@ export interface NotificationPreferences {
   roster_approved: boolean
   roster_rejected: boolean
   schedule_changed: boolean
-  availability_reminder: boolean
+
   approval_reminder: boolean
   system_announcement: boolean
   welcome: boolean

@@ -147,16 +147,7 @@
               My Schedule
             </router-link>
 
-            <router-link
-              to="/availability"
-              class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200"
-              :class="$route.path === '/availability' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'"
-            >
-              <svg class="mr-3 h-5 w-5" :class="$route.path === '/availability' ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-              </svg>
-              Availability
-            </router-link>
+
 
             <router-link
               to="/shift-swaps"
@@ -169,16 +160,7 @@
               Shift Swaps
             </router-link>
 
-            <router-link
-              to="/my-analytics"
-              class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200"
-              :class="$route.path === '/my-analytics' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'"
-            >
-              <svg class="mr-3 h-5 w-5" :class="$route.path === '/my-analytics' ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
-              </svg>
-              My Analytics
-            </router-link>
+
           </div>
 
           <!-- Common Section -->
@@ -344,8 +326,7 @@ const pageTitle = computed(() => {
       return 'Shift Swaps'
     case '/my-schedule':
       return 'My Schedule'
-    case '/availability':
-      return 'Availability'
+
     case '/notifications':
       return 'Notifications'
     case '/profile':

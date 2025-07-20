@@ -3,7 +3,7 @@ const { sequelize } = require('../config/database');
 const Shift = require('../models/Shift');
 const ShiftAssignment = require('../models/ShiftAssignment');
 const User = require('../models/User');
-const Availability = require('../models/Availability');
+
 
 /**
  * Conflict Detection Service
@@ -308,25 +308,7 @@ const detectConflicts = async (employeeId, shiftId) => {
       });
     }
 
-    // 2. Check availability preferences
-    const availability = await Availability.findOne({
-      where: {
-        employee_id: employeeId,
-        date: targetShift.date,
-        availability_type: 'unavailable'
-      }
-    });
-
-    if (availability) {
-      conflicts.push({
-        id: `availability_${availability.id}`,
-        type: 'Availability Conflict',
-        severity: 'warning',
-        description: 'Employee marked as unavailable for this date',
-        details: availability.reason || 'No reason provided',
-        availability_id: availability.id
-      });
-    }
+    // 2. Availability checking removed - no longer supported
 
     // 3. Check maximum consecutive days
     const maxConsecutiveDays = 5; // This could be configurable

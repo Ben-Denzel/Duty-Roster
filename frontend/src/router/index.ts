@@ -69,12 +69,7 @@ const router = createRouter({
       component: () => import('../views/ShiftSwapsView.vue'),
       meta: { requiresAuth: true }
     },
-    {
-      path: '/availability',
-      name: 'availability',
-      component: () => import('../views/AvailabilityView.vue'),
-      meta: { requiresAuth: true }
-    },
+
     {
       path: '/notifications',
       name: 'notifications',

@@ -64,7 +64,7 @@
             <h3 class="text-lg font-semibold text-gray-900">System Configuration</h3>
             <p class="text-sm text-gray-600">Manage system settings and preferences</p>
           </div>
-          
+
           <!-- Tab Navigation -->
           <div class="border-b border-gray-200">
             <nav class="flex space-x-8 px-6" aria-label="Tabs">
@@ -73,8 +73,8 @@
                 :key="tab.id"
                 @click="activeTab = tab.id"
                 class="py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200"
-                :class="activeTab === tab.id 
-                  ? 'border-blue-500 text-blue-600' 
+                :class="activeTab === tab.id
+                  ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
               >
                 {{ tab.name }}
@@ -231,14 +231,7 @@
                   />
                   <label class="ml-2 block text-sm text-gray-900">Shift Swapping</label>
                 </div>
-                <div class="flex items-center">
-                  <input
-                    v-model="configForm.features.availability_management"
-                    type="checkbox"
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label class="ml-2 block text-sm text-gray-900">Availability Management</label>
-                </div>
+
                 <div class="flex items-center">
                   <input
                     v-model="configForm.features.roster_templates"
@@ -365,7 +358,7 @@ const configForm = reactive({
     enterprise_registration: true,
     email_notifications: true,
     shift_swapping: true,
-    availability_management: true,
+
     roster_templates: true
   }
 })
@@ -385,7 +378,7 @@ const fetchSettings = async () => {
     error.value = ''
     const response = await systemSettingsAPI.getSettings()
     settings.value = response.settings
-    
+
     // Populate form with current configuration
     if (response.settings.configuration) {
       Object.assign(configForm, response.settings.configuration)
@@ -414,7 +407,7 @@ const performMaintenance = async (task: string) => {
     maintenanceLoading.value = true
     const response = await systemSettingsAPI.performMaintenance(task)
     showSuccess(`Maintenance task completed: ${response.message}`)
-    
+
     // Refresh settings to show updated statistics
     await fetchSettings()
   } catch (err: any) {
