@@ -10,13 +10,21 @@ export const useThemeStore = defineStore('theme', () => {
 
   // Initialize theme from localStorage or default to system
   const initializeTheme = () => {
-    const savedTheme = localStorage.getItem('schedulax-theme') as Theme
-    if (savedTheme && ['light', 'dark', 'system'].includes(savedTheme)) {
-      theme.value = savedTheme
-    } else {
+    try {
+      const savedTheme = localStorage.getItem('schedulax-theme') as Theme
+
+      if (savedTheme && ['light', 'dark', 'system'].includes(savedTheme)) {
+        theme.value = savedTheme
+      } else {
+        theme.value = 'system'
+      }
+
+      updateTheme()
+    } catch (error) {
+      console.error('Error initializing theme:', error)
       theme.value = 'system'
+      updateTheme()
     }
-    updateTheme()
   }
 
   // Update the actual theme based on current setting
@@ -56,6 +64,9 @@ export const useThemeStore = defineStore('theme', () => {
     }
   }
 
+  // Watch theme changes
+  watch(theme, updateTheme, { immediate: true })
+
   // Watch for system theme changes
   const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
   mediaQuery.addEventListener('change', () => {
@@ -63,9 +74,6 @@ export const useThemeStore = defineStore('theme', () => {
       updateTheme()
     }
   })
-
-  // Watch theme changes
-  watch(theme, updateTheme)
 
   // Getters
   const currentTheme = () => theme.value

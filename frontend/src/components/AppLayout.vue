@@ -458,7 +458,7 @@
         </div>
         <div class="flex items-center space-x-2 flex-shrink-0">
           <!-- Mobile theme toggle -->
-          <ThemeToggle />
+          <ThemeToggle :showDropdown="false" />
           <!-- Mobile notifications -->
           <NotificationBell />
           <!-- Mobile user menu -->
@@ -483,7 +483,7 @@
 
             <div class="flex items-center space-x-4">
               <!-- Theme Toggle -->
-              <ThemeToggle :showDropdown="true" />
+              <ThemeToggle :showDropdown="false" />
 
               <!-- Notifications -->
               <NotificationBell />

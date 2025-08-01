@@ -174,7 +174,7 @@
             </div>
           </div>
 
-          <div class="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100">
+          <!-- <div class="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100">
             <div class="p-6">
               <div class="flex items-center">
                 <div class="flex-shrink-0">
@@ -191,9 +191,9 @@
                 </div>
               </div>
             </div>
-          </div>
+          </div> -->
 
-          <div class="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100">
+          <!-- <div class="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100">
             <div class="p-6">
               <div class="flex items-center">
                 <div class="flex-shrink-0">
@@ -210,7 +210,7 @@
                 </div>
               </div>
             </div>
-          </div>
+          </div> -->
         </template>
 
         <!-- Manager Stats -->

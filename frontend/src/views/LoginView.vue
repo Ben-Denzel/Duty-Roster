@@ -2,8 +2,10 @@
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
     <!-- Theme Toggle (Top Right) -->
     <div class="absolute top-4 right-4 z-50">
-      <ThemeToggle :showDropdown="true" />
+      <ThemeToggle :showDropdown="false" />
     </div>
+
+
 
     <div class="min-h-screen flex">
       <!-- Left side - Branding -->
@@ -100,7 +102,7 @@
               </div>
             </div>
 
-            <div class="flex items-center justify-between">
+            <!-- <div class="flex items-center justify-between">
               <div class="flex items-center">
                 <input
                   id="remember-me"
@@ -117,7 +119,7 @@
                   Forgot your password?
                 </a>
               </div>
-            </div>
+            </div> -->
 
             <div v-if="authStore.error" class="rounded-lg bg-red-50 border border-red-200 p-4">
               <div class="flex">
@@ -152,13 +154,13 @@
 
             <div class="text-center">
               <p class="text-sm text-gray-600">
-                Need access? Contact your system administrator or enterprise admin to get an account.
+                Need access? Contact your enterprise admin to get an account.
               </p>
-              <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <!-- <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <p class="text-xs text-blue-800 font-medium">Demo Credentials:</p>
                 <p class="text-xs text-blue-700">Email: admin@dutyroster.com</p>
                 <p class="text-xs text-blue-700">Password: admin123</p>
-              </div>
+              </div> -->
             </div>
           </form>
         </div>
