@@ -200,7 +200,7 @@ const itemsPerPage = ref(10)
 const showApprovalModal = ref(false)
 const showDetailsModal = ref(false)
 const selectedRoster = ref(null)
-const modalAction = ref('approve')
+const modalAction = ref<'approve' | 'reject'>('approve')
 
 // Pagination
 const pagination = ref({

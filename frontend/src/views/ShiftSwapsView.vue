@@ -295,8 +295,13 @@ const pendingCount = computed(() => {
 const fetchSwapRequests = async () => {
   loading.value = true
   try {
-    const params = {
-      type: filters.value.type,
+    const params: {
+      type?: 'all' | 'sent' | 'received'
+      status?: string
+      page: number
+      limit: number
+    } = {
+      type: filters.value.type as 'all' | 'sent' | 'received',
       page: pagination.value.current_page,
       limit: pagination.value.items_per_page
     }

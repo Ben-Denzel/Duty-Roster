@@ -328,8 +328,8 @@ const handleSubmit = async () => {
     const payload = {
       ...form,
       enterprise_id: authStore.user?.enterprise_id,
-      // Convert empty string to null for manager_id
-      manager_id: form.manager_id || null
+      // Convert empty string to null for manager_id and ensure it's a number
+      manager_id: form.manager_id ? Number(form.manager_id) : null
     }
 
     console.log('Submitting department payload:', payload)

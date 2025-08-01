@@ -225,7 +225,8 @@ const handleSubmit = async () => {
   try {
     const userData = {
       ...form,
-      enterprise_id: authStore.user?.enterprise_id || null
+      enterprise_id: authStore.user?.enterprise_id || null,
+      role: form.role as 'manager' | 'employee' // Ensure role is properly typed
     }
 
     // Remove empty fields

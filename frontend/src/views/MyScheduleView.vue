@@ -173,21 +173,48 @@ import { useAuthStore } from '@/stores/auth'
 import { employeeAPI } from '@/services/api'
 import AppLayout from '@/components/AppLayout.vue'
 
+// Type definitions
+interface ShiftAssignment {
+  assignment_id: string
+  shift: {
+    id: string
+    title: string
+    date: string
+    start_time: string
+    end_time: string
+    shift_type: string
+    location?: string
+    description?: string
+    roster?: {
+      name: string
+      status: string
+    }
+  }
+  status: string
+  role?: string
+  notes?: string
+}
+
+interface Filters {
+  start_date: string
+  end_date: string
+}
+
 const authStore = useAuthStore()
 
-// Reactive data
-const schedule = ref([])
+// Reactive data with proper typing
+const schedule = ref<ShiftAssignment[]>([])
 const loading = ref(false)
 
-// Filters
-const filters = ref({
+// Filters with proper typing
+const filters = ref<Filters>({
   start_date: '',
   end_date: ''
 })
 
 // Computed
 const scheduleByDate = computed(() => {
-  const grouped = {}
+  const grouped: Record<string, ShiftAssignment[]> = {}
   schedule.value.forEach(assignment => {
     const date = assignment.shift.date
     if (!grouped[date]) {
@@ -198,7 +225,7 @@ const scheduleByDate = computed(() => {
   
   // Sort dates
   const sortedDates = Object.keys(grouped).sort()
-  const sortedGrouped = {}
+  const sortedGrouped: Record<string, ShiftAssignment[]> = {}
   sortedDates.forEach(date => {
     sortedGrouped[date] = grouped[date].sort((a, b) => 
       a.shift.start_time.localeCompare(b.shift.start_time)
@@ -223,7 +250,7 @@ const monthlyShifts = computed(() => {
 const fetchSchedule = async () => {
   loading.value = true
   try {
-    const params = {}
+    const params: Record<string, string> = {}
     if (filters.value.start_date) params.start_date = filters.value.start_date
     if (filters.value.end_date) params.end_date = filters.value.end_date
     
@@ -251,7 +278,7 @@ const setCurrentMonth = () => {
 
 // Removed confirm/decline functionality - employees are assigned shifts, not choosing them
 
-const requestSwap = async (shiftData: any) => {
+const requestSwap = async (shiftData: ShiftAssignment) => {
   try {
     // Show confirmation dialog with shift details
     const shiftDate = new Date(shiftData.shift.date).toLocaleDateString()
@@ -266,7 +293,7 @@ const requestSwap = async (shiftData: any) => {
 
     // Create swap request
     await employeeAPI.createSwapRequest({
-      shift_id: shiftData.shift.id,
+      shift_id: Number(shiftData.shift.id),
       request_type: 'swap',
       reason: reason,
       message: `Swap request for ${shiftDate} ${shiftTime}`,
@@ -285,13 +312,13 @@ const requestSwap = async (shiftData: any) => {
   }
 }
 
-const canRequestSwap = (shiftData: any) => {
+const canRequestSwap = (shiftData: ShiftAssignment) => {
   return shiftData.shift.roster?.status === 'published' &&
          ['assigned', 'confirmed'].includes(shiftData.status)
 }
 
 const getShiftTypeClass = (type: string) => {
-  const classes = {
+  const classes: Record<string, string> = {
     day: 'bg-yellow-100 text-yellow-800',
     night: 'bg-indigo-100 text-indigo-800',
     weekend: 'bg-purple-100 text-purple-800',
@@ -301,48 +328,36 @@ const getShiftTypeClass = (type: string) => {
 }
 
 const getAssignmentStatusClass = (status: string) => {
-  const classes = {
+  const classes: Record<string, string> = {
     assigned: 'bg-blue-100 text-blue-800',
     confirmed: 'bg-green-100 text-green-800',
-    completed: 'bg-green-100 text-green-800',
-    no_show: 'bg-red-100 text-red-800',
-    swap_requested: 'bg-yellow-100 text-yellow-800'
+    declined: 'bg-red-100 text-red-800',
+    pending: 'bg-yellow-100 text-yellow-800'
   }
   return classes[status] || 'bg-gray-100 text-gray-800'
 }
 
 const getAssignmentStatusLabel = (status: string) => {
-  const labels = {
+  const labels: Record<string, string> = {
     assigned: 'Assigned',
-    confirmed: 'Assigned',
-    completed: 'Completed',
-    no_show: 'No Show',
-    swap_requested: 'Swap Requested'
+    confirmed: 'Confirmed',
+    declined: 'Declined',
+    pending: 'Pending'
   }
   return labels[status] || status
 }
 
 const formatDateHeader = (dateString: string) => {
   const date = new Date(dateString)
-  const today = new Date()
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  
-  if (date.toDateString() === today.toDateString()) {
-    return `Today, ${date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`
-  } else if (date.toDateString() === tomorrow.toDateString()) {
-    return `Tomorrow, ${date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`
-  } else {
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    })
-  }
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
 }
 
-// Lifecycle
+// Initialize
 onMounted(() => {
   setCurrentMonth()
 })

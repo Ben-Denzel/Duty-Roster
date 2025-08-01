@@ -224,7 +224,7 @@ const createSystemAdmin = async () => {
       full_name: form.full_name,
       email: form.email,
       password: form.password,
-      role: 'systemAdmin',
+      role: 'systemAdmin' as const,
       gender: form.gender || undefined
     }
 

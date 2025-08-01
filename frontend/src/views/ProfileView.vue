@@ -211,10 +211,46 @@ import { authAPI } from '@/services/api'
 import AppLayout from '@/components/AppLayout.vue'
 import ProfileEditModal from '@/components/ProfileEditModal.vue'
 
+// Type definitions
+interface ProfileStats {
+  [key: string]: {
+    value: string | number
+    label: string
+  }
+}
+
+interface Profile {
+  id: string
+  full_name: string
+  email: string
+  role: string
+  created_at: string
+  updated_at: string
+  is_active?: boolean
+  gender?: string
+  enterprise?: {
+    id: number
+    name: string
+    created_at: string
+  }
+  department?: {
+    id: number
+    name: string
+    description: string
+    manager?: {
+      full_name: string
+      email: string
+    }
+  }
+  unreadNotifications?: number
+  recentNotifications?: any[]
+  stats?: ProfileStats
+}
+
 const authStore = useAuthStore()
 
-// State
-const profile = ref(null)
+// State with proper typing
+const profile = ref<Profile | null>(null)
 const loading = ref(false)
 const showEditModal = ref(false)
 
@@ -239,7 +275,7 @@ const handleProfileUpdated = () => {
 }
 
 const getRoleDisplay = (role: string) => {
-  const roleMap = {
+  const roleMap: Record<string, string> = {
     systemAdmin: 'System Administrator',
     enterpriseAdmin: 'Enterprise Administrator',
     manager: 'Manager',
@@ -249,7 +285,7 @@ const getRoleDisplay = (role: string) => {
 }
 
 const getRoleBadgeClass = (role: string) => {
-  const classMap = {
+  const classMap: Record<string, string> = {
     systemAdmin: 'bg-purple-100 text-purple-800',
     enterpriseAdmin: 'bg-blue-100 text-blue-800',
     manager: 'bg-green-100 text-green-800',
@@ -259,7 +295,7 @@ const getRoleBadgeClass = (role: string) => {
 }
 
 const getRoleStatsTitle = (role: string) => {
-  const titleMap = {
+  const titleMap: Record<string, string> = {
     systemAdmin: 'Platform Statistics',
     enterpriseAdmin: 'Enterprise Statistics',
     manager: 'Management Statistics',
@@ -268,13 +304,13 @@ const getRoleStatsTitle = (role: string) => {
   return titleMap[role] || 'Statistics'
 }
 
-const getFilteredStats = (stats: any) => {
+const getFilteredStats = (stats: any): ProfileStats => {
   if (!stats) return {}
   
-  const filtered = {}
+  const filtered: ProfileStats = {}
   Object.keys(stats).forEach(key => {
     if (key !== 'accountAge') {
-      const labelMap = {
+      const labelMap: Record<string, string> = {
         totalEnterprises: 'Enterprises',
         totalUsers: 'Total Users',
         totalDepartments: 'Departments',
@@ -305,7 +341,6 @@ const getFilteredStats = (stats: any) => {
 }
 
 const formatDate = (dateString: string) => {
-  if (!dateString) return 'N/A'
   return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -313,7 +348,7 @@ const formatDate = (dateString: string) => {
   })
 }
 
-// Lifecycle
+// Initialize
 onMounted(() => {
   fetchProfile()
 })

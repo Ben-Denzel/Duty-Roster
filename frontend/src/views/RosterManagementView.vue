@@ -702,7 +702,7 @@ const fetchRosters = async () => {
     } else {
       // Fetch rosters for specific department
       console.log('Fetching rosters for department:', filters.value.department_id, 'with params:', params)
-      response = await rosterAPI.getByDepartment(filters.value.department_id, params)
+      response = await rosterAPI.getByDepartment(Number(filters.value.department_id), params)
     }
     rosters.value = response.rosters || []
     pagination.value = response.pagination || pagination.value
