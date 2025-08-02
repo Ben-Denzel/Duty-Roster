@@ -6,6 +6,12 @@ const router = createRouter({
   routes: [
     {
       path: '/',
+      name: 'landing',
+      component: () => import('../views/LandingView.vue'),
+      meta: { requiresGuest: true }
+    },
+    {
+      path: '/app',
       redirect: '/dashboard'
     },
     {
@@ -107,6 +113,12 @@ const router = createRouter({
 // Route guards
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
+
+  // If user is authenticated and trying to access landing page, redirect to dashboard
+  if (to.path === '/' && authStore.isAuthenticated) {
+    next('/dashboard')
+    return
+  }
 
   // Check if route requires authentication
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
