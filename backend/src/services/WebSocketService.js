@@ -16,7 +16,37 @@ class WebSocketService {
   initialize(server) {
     this.io = new Server(server, {
       cors: {
-        origin: process.env.FRONTEND_URL || "http://localhost:5173",
+        origin: function (origin, callback) {
+          // Allow requests with no origin (like mobile apps or curl requests)
+          if (!origin) return callback(null, true);
+          
+          // In development, allow any origin for easier debugging
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`🌐 WebSocket Development mode - allowing origin: ${origin}`);
+            return callback(null, true);
+          }
+          
+          const allowedOrigins = [
+            process.env.FRONTEND_URL || "http://localhost:5173",
+            'https://schedulax-frontend.onrender.com',
+            'https://schedulax.vercel.app',
+            'https://schedulax-frontend.vercel.app',
+            'https://schedulax.herokuapp.com',
+            'https://schedulax.netlify.app',
+            'http://localhost:3000',
+            'http://localhost:5173',
+            'http://localhost:8080',
+            'http://127.0.0.1:5173',
+            'http://127.0.0.1:3000'
+          ];
+          
+          if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+          } else {
+            console.log(`🚫 WebSocket CORS blocked origin: ${origin}`);
+            callback(new Error('Not allowed by CORS'));
+          }
+        },
         methods: ["GET", "POST"],
         credentials: true
       }
