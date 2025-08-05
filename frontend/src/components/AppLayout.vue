@@ -5,6 +5,8 @@
       <div class="fixed inset-0 bg-gray-600 bg-opacity-75 dark:bg-black dark:bg-opacity-60" @click="mobileMenuOpen = false"></div>
     </div>
 
+
+
     <!-- Mobile sidebar -->
     <div :class="[
       'fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-xl dark:shadow-2xl transform transition-all duration-300 ease-in-out lg:hidden',
@@ -17,8 +19,8 @@
             <div class="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
               <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-              </svg>
-            </div>
+            </svg>
+          </div>
             <div class="ml-3">
               <h1 class="text-xl font-bold text-gray-900 dark:text-white">SchedulaX</h1>
               <p class="text-xs text-gray-500 dark:text-gray-400">Enterprise Management</p>
@@ -462,10 +464,49 @@
           <!-- Mobile notifications -->
           <NotificationBell />
           <!-- Mobile user menu -->
-          <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-            <span class="text-sm font-medium text-white">
-              {{ authStore.user?.full_name?.charAt(0).toUpperCase() }}
-            </span>
+          <div class="relative mobile-user-menu">
+            <button
+              @click="mobileUserMenuOpen = !mobileUserMenuOpen"
+              class="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center hover:from-blue-600 hover:to-indigo-700 transition-all duration-200"
+            >
+              <span class="text-sm font-medium text-white">
+                {{ authStore.user?.full_name?.charAt(0).toUpperCase() }}
+              </span>
+            </button>
+            
+            <!-- Mobile user dropdown -->
+            <div
+              v-if="mobileUserMenuOpen"
+              class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-60 border border-gray-200 dark:border-gray-700 transform -translate-x-2"
+            >
+              <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                <div class="text-sm font-medium text-gray-900 dark:text-white">{{ authStore.user?.full_name }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">{{ roleDisplay }}</div>
+              </div>
+              <router-link
+                to="/profile"
+                @click="mobileUserMenuOpen = false"
+                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+              >
+                <div class="flex items-center">
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Profile
+                </div>
+              </router-link>
+              <button
+                @click="handleMobileLogout"
+                class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
+              >
+                <div class="flex items-center">
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Logout
+                </div>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -516,7 +557,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import NotificationBell from './NotificationBell.vue'
@@ -527,6 +568,23 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 const mobileMenuOpen = ref(false)
+const mobileUserMenuOpen = ref(false)
+
+// Click outside handler for mobile user menu
+const handleClickOutside = (event: Event) => {
+  const target = event.target as HTMLElement
+  if (!target.closest('.mobile-user-menu')) {
+    mobileUserMenuOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 const roleDisplay = computed(() => {
   switch (authStore.user?.role) {
@@ -576,5 +634,11 @@ const pageTitle = computed(() => {
 const handleLogout = () => {
   authStore.logout()
   router.push('/login')
+}
+
+const handleMobileLogout = () => {
+  authStore.logout()
+  router.push('/login')
+  mobileUserMenuOpen.value = false
 }
 </script>
