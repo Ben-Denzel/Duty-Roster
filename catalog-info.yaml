@@ -4,13 +4,13 @@ metadata:
   name: Roster
   description: Multi tenant duty roster manager
   tags:
-    - full stack
+    - fullStack
     - vue.js
     - node.js
   annotations:
     github.com/project-slug: https://github.com/Ben-Denzel/Duty-Roster
     backstage.io/techdocs-ref: dir:. 
 spec:
-  type: web app
+  type: webApp
   lifecycle: production
   owner: ben
